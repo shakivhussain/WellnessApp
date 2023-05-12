@@ -20,10 +20,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,7 +54,17 @@ class MainActivity : ComponentActivity() {
 fun WellnessScreen(modifier: Modifier = Modifier) {
     Column {
         WaterCounter()
-        WellnessTasksList(modifier)
+//        val listOfTasks = remember { getWellnessTasks().toMutableStateList() }
+
+
+        val listOfTasks = remember {
+            mutableStateListOf<WellnessTask>().apply { addAll(getWellnessTasks()) }
+        }
+
+
+        WellnessTasksList(modifier, listOfTasks, onClose = { task ->
+            listOfTasks.remove(task)
+        })
     }
 
 }
@@ -102,15 +114,18 @@ fun WaterCounter(modifier: Modifier = Modifier) {
 }
 
 
-
 @Composable
 fun WellnessTasksList(
-    modifier: Modifier=Modifier,
-    list: List<WellnessTask> = remember { getWellnessTasks() }
-){
-    LazyColumn(modifier){
-        items(list){task->
-            WellnessTaskItem(taskName = task.label)
+    modifier: Modifier = Modifier,
+    listOfTasks: SnapshotStateList<WellnessTask>,
+    onClose: (WellnessTask) -> Unit
+) {
+    LazyColumn(modifier) {
+        items(
+            listOfTasks,
+            key = {task-> task.id }
+        ) { task ->
+            WellnessTaskItem(taskName = task.label, onClose = { onClose(task) })
         }
     }
 
@@ -120,6 +135,7 @@ fun WellnessTasksList(
 @Composable
 fun WellnessTaskItem(
     taskName: String,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var checkedState by rememberSaveable() { mutableStateOf(false) }
@@ -127,10 +143,10 @@ fun WellnessTaskItem(
     WellnessTaskItem(
         taskName = taskName,
         checked = checkedState,
-        onCheckedChange = {newValue->
+        onCheckedChange = { newValue ->
             checkedState = newValue
         },
-        onClose = { },
+        onClose = { onClose() },
         modifier = modifier
     )
 }
