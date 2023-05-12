@@ -23,13 +23,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shakiv.husain.wellnessapp.WellnessData.getWellnessTasks
 import com.shakiv.husain.wellnessapp.ui.theme.WellnessAppTheme
 
@@ -51,20 +51,25 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun WellnessScreen(modifier: Modifier = Modifier) {
+fun WellnessScreen(
+    modifier: Modifier = Modifier,
+    wellnessViewModel: WellnessViewModel = viewModel()
+) {
     Column {
         WaterCounter()
 //        val listOfTasks = remember { getWellnessTasks().toMutableStateList() }
-
 
         val listOfTasks = remember {
             mutableStateListOf<WellnessTask>().apply { addAll(getWellnessTasks()) }
         }
 
-
-        WellnessTasksList(modifier, listOfTasks, onClose = { task ->
-            listOfTasks.remove(task)
-        })
+        WellnessTasksList(
+            modifier, wellnessViewModel.tasks,
+            onClose = { task -> wellnessViewModel.remove(task) },
+            onCheckedChange = { checked, task ->
+                wellnessViewModel.changeTaskChecked(checked = checked, item = task)
+            }
+        )
     }
 
 }
@@ -79,7 +84,8 @@ fun WaterCounter(modifier: Modifier = Modifier) {
         if (count > 0) {
             var showTask by remember { mutableStateOf(true) }
             if (showTask) {
-                WellnessTaskItem(taskName = "Have you taken your 15 minute walk today?",
+                WellnessTaskItem(
+                    taskName = "Have you taken your 15 minute walk today?",
                     onClose = {
                         showTask = false
                     },
@@ -118,50 +124,48 @@ fun WaterCounter(modifier: Modifier = Modifier) {
 fun WellnessTasksList(
     modifier: Modifier = Modifier,
     listOfTasks: SnapshotStateList<WellnessTask>,
-    onClose: (WellnessTask) -> Unit
+    onClose: (WellnessTask) -> Unit,
+    onCheckedChange: (Boolean, WellnessTask) -> Unit
 ) {
     LazyColumn(modifier) {
         items(
             listOfTasks,
-            key = {task-> task.id }
+            key = { task -> task.id }
         ) { task ->
-            WellnessTaskItem(taskName = task.label, onClose = { onClose(task) })
+            WellnessTaskItem(
+                taskName = task.label,
+                checked = task.checked,
+                onClose = { onClose(task) },
+                onCheckedChange = {
+                    onCheckedChange(it, task)
+                }
+            )
         }
     }
 
 }
 
 
-@Composable
-fun WellnessTaskItem(
-    taskName: String,
-    onClose: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var checkedState by rememberSaveable() { mutableStateOf(false) }
+//@Composable
+//fun WellnessTaskItem(
+//    taskName: String,
+//    onClose: () -> Unit,
+//    onCheckedChange: (Boolean) -> Unit,
+//    modifier: Modifier = Modifier
+//) {
+//    var checkedState by rememberSaveable() { mutableStateOf(false) }
+//
+//    WellnessTaskItem(
+//        taskName = taskName,
+//        onClose = { onClose() },
+//        checked = checkedState,
+//        onCheckedChange = { newValue ->
+//            onCheckedChange(newValue)
+//        },
+//        modifier = modifier
+//    )
+//}
 
-    WellnessTaskItem(
-        taskName = taskName,
-        checked = checkedState,
-        onCheckedChange = { newValue ->
-            checkedState = newValue
-        },
-        onClose = { onClose() },
-        modifier = modifier
-    )
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun WellnessTaskItemPreview() {
-    WellnessTaskItem(
-        taskName = "Shakib",
-        onClose = {},
-        checked = true,
-        onCheckedChange = {}
-    )
-}
 
 @Composable
 fun WellnessTaskItem(
@@ -198,6 +202,11 @@ fun WellnessTaskItem(
     }
 
 }
+
+
+
+
+
 
 
 @Composable
