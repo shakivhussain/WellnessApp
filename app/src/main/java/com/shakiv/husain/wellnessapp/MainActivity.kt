@@ -3,16 +3,18 @@ package com.shakiv.husain.wellnessapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -20,11 +22,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.shakiv.husain.wellnessapp.WellnessData.getWellnessTasks
 import com.shakiv.husain.wellnessapp.ui.theme.WellnessAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -46,7 +50,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun WellnessScreen(modifier: Modifier = Modifier) {
-    WaterCounter()
+    Column {
+        WaterCounter()
+        WellnessTasksList(modifier)
+    }
+
 }
 
 @Composable
@@ -83,7 +91,7 @@ fun WaterCounter(modifier: Modifier = Modifier) {
 
             Button(
                 onClick = { count = 0 },
-                Modifier.padding(8.dp)
+                Modifier.padding(8.dp),
             ) {
                 Text(text = "Clear Water Count")
 
@@ -91,6 +99,40 @@ fun WaterCounter(modifier: Modifier = Modifier) {
 
         }
     }
+}
+
+
+
+@Composable
+fun WellnessTasksList(
+    modifier: Modifier=Modifier,
+    list: List<WellnessTask> = remember { getWellnessTasks() }
+){
+    LazyColumn(modifier){
+        items(list){task->
+            WellnessTaskItem(taskName = task.label)
+        }
+    }
+
+}
+
+
+@Composable
+fun WellnessTaskItem(
+    taskName: String,
+    modifier: Modifier = Modifier
+) {
+    var checkedState by rememberSaveable() { mutableStateOf(false) }
+
+    WellnessTaskItem(
+        taskName = taskName,
+        checked = checkedState,
+        onCheckedChange = {newValue->
+            checkedState = newValue
+        },
+        onClose = { },
+        modifier = modifier
+    )
 }
 
 
@@ -124,16 +166,18 @@ fun WellnessTaskItem(
                 .padding(start = 8.dp)
         )
 
-        Checkbox(checked = checked, onCheckedChange = onCheckedChange,  modifier = Modifier
-            .weight(.5F)
-            .padding(start = 8.dp))
-        Icon(
-            imageVector = Icons.Filled.Close,
-            contentDescription = null,
-            modifier = Modifier.clickable {
-                onClose()
-            }
+        Checkbox(
+            checked = checked, onCheckedChange = onCheckedChange, modifier = Modifier
+                .weight(.5F)
+                .padding(start = 8.dp)
         )
+
+        IconButton(onClick = { onClose() }) {
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = "Close",
+            )
+        }
 
     }
 
