@@ -58,11 +58,9 @@ fun WellnessScreen(
     Column {
         WaterCounter()
 //        val listOfTasks = remember { getWellnessTasks().toMutableStateList() }
-
         val listOfTasks = remember {
             mutableStateListOf<WellnessTask>().apply { addAll(getWellnessTasks()) }
         }
-
         WellnessTasksList(
             modifier, wellnessViewModel.tasks,
             onClose = { task -> wellnessViewModel.remove(task) },
@@ -76,11 +74,8 @@ fun WellnessScreen(
 
 @Composable
 fun WaterCounter(modifier: Modifier = Modifier) {
-
     Column(modifier = modifier.padding(16.dp)) {
-
         var count by remember { mutableStateOf(0) }
-
         if (count > 0) {
             var showTask by remember { mutableStateOf(true) }
             if (showTask) {
@@ -181,12 +176,6 @@ fun WellnessTaskItem(
 
 }
 
-
-
-
-
-
-
 @Composable
 fun StateLessComposable(
     count: Int,
@@ -212,14 +201,10 @@ fun StateLessComposable(
 @Preview(showBackground = true)
 @Composable
 fun StateFullComposable(modifier: Modifier = Modifier) {
-
     var waterCount by remember { mutableStateOf(0) }
     var juiceCount by remember { mutableStateOf(0) }
-
     Column {
-
         StateLessComposable(count = waterCount, onIncrement = { waterCount++ }, modifier = modifier)
         StateLessComposable(count = juiceCount, onIncrement = { juiceCount++ }, modifier = modifier)
     }
-
 }
